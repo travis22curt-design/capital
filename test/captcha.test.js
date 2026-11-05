@@ -174,6 +174,64 @@ async function runTests() {
     assert.ok(body.challengeToken);
   });
 
+  // 9. Server-side redirect (destination must never reach the client)
+  async function asyncTest(name, fn) {
+    try {
+      await fn();
+      console.log(`  PASS: ${name}`);
+      passed++;
+    } catch (err) {
+      console.error(`  FAIL: ${name}`);
+      console.error(`    ${err.message}`);
+      failed++;
+    }
+  }
+
+  const redirectEvent = (headers = {}) => ({
+    rawPath: '/api/captcha/redirect',
+    headers,
+    requestContext: { http: { method: 'GET' } }
+  });
+
+  await asyncTest('Redirect endpoint rejects requests without a pass token', async () => {
+    process.env.REDIRECT_URL = 'https://example.com/dest';
+    const res = await lambdaHandler(redirectEvent());
+    assert.strictEqual(res.statusCode, 403);
+    assert.ok(!JSON.stringify(res).includes('example.com'), 'Destination must not leak on rejection');
+  });
+
+  await asyncTest('Redirect endpoint 302s to server-configured URL with a valid pass token', async () => {
+    process.env.REDIRECT_URL = 'https://example.com/dest';
+    const res = await lambdaHandler(redirectEvent({ 'x-captcha-token': humanPassToken }));
+    assert.strictEqual(res.statusCode, 302);
+    assert.strictEqual(res.headers.Location, 'https://example.com/dest');
+  });
+
+  await asyncTest('Redirect endpoint accepts the pass token via cookie', async () => {
+    process.env.REDIRECT_URL = 'https://example.com/dest';
+    const ev = redirectEvent();
+    ev.cookies = [`captcha_token=${humanPassToken}`];
+    const res = await lambdaHandler(ev);
+    assert.strictEqual(res.statusCode, 302);
+  });
+
+  await asyncTest('Redirect endpoint 404s when REDIRECT_URL is unset or invalid', async () => {
+    delete process.env.REDIRECT_URL;
+    process.env.GUARD_CONFIG_PATH = '/nonexistent/config.json';
+    assert.strictEqual((await lambdaHandler(redirectEvent({ 'x-captcha-token': humanPassToken }))).statusCode, 404);
+    process.env.REDIRECT_URL = 'javascript:alert(1)';
+    assert.strictEqual((await lambdaHandler(redirectEvent({ 'x-captcha-token': humanPassToken }))).statusCode, 404);
+    delete process.env.REDIRECT_URL;
+    delete process.env.GUARD_CONFIG_PATH;
+  });
+
+  await asyncTest('Redirect destination is read from config.json when no env var is set', async () => {
+    delete process.env.REDIRECT_URL;
+    const res = await lambdaHandler(redirectEvent({ 'x-captcha-token': humanPassToken }));
+    assert.strictEqual(res.statusCode, 302);
+    assert.strictEqual(res.headers.Location, require('../config.json').redirectUrl.replace(/\/?$/, '/'));
+  });
+
   console.log(`\nTests finished: ${passed} passed, ${failed} failed.`);
   if (failed > 0) {
     process.exit(1);

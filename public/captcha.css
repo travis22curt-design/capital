@@ -1,27 +1,25 @@
-/* Guard Slider CAPTCHA & Anti-Bot UI Theme */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
+/* Guard Slider CAPTCHA — light corporate theme */
 :root {
-  --bg-primary: #0b0f19;
-  --bg-card: rgba(17, 24, 39, 0.85);
-  --bg-card-border: rgba(255, 255, 255, 0.08);
-  --text-main: #f3f4f6;
-  --text-muted: #9ca3af;
-  --accent-primary: #6366f1;
-  --accent-primary-hover: #4f46e5;
-  --accent-glow: rgba(99, 102, 241, 0.35);
-  --success: #10b981;
-  --success-glow: rgba(16, 185, 129, 0.3);
-  --danger: #ef4444;
-  --danger-glow: rgba(239, 68, 68, 0.3);
-  --track-bg: #1f2937;
-  --track-border: #374151;
+  --bg-primary: #f3f5f9;
+  --bg-card: #ffffff;
+  --bg-card-border: #e3e8ef;
+  --text-main: #111827;
+  --text-muted: #5b6676;
+  --accent-primary: #1e4fb8;
+  --accent-primary-hover: #173f94;
+  --accent-soft: #e8effc;
+  --success: #15803d;
+  --success-soft: #ecf8f0;
+  --success-border: #bfe3cc;
+  --danger: #b42318;
+  --track-bg: #eef1f6;
+  --track-border: #d5dbe5;
   --handle-bg: #ffffff;
-  --radius-lg: 16px;
-  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-md: 8px;
   --radius-sm: 6px;
-  --shadow-card: 0 20px 40px -15px rgba(0, 0, 0, 0.6), 0 0 2px rgba(255, 255, 255, 0.08);
-  --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.06), 0 8px 24px -8px rgba(16, 24, 40, 0.12);
+  --transition-smooth: all 0.2s ease;
 }
 
 * {
@@ -31,12 +29,8 @@
 }
 
 body {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', Arial, sans-serif;
   background-color: var(--bg-primary);
-  background-image: 
-    radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, rgba(56, 189, 248, 0.12) 0px, transparent 50%),
-    radial-gradient(at 50% 50%, rgba(16, 185, 129, 0.05) 0px, transparent 60%);
   color: var(--text-main);
   min-height: 100vh;
   display: flex;
@@ -51,8 +45,6 @@ body {
   width: 100%;
   max-width: 480px;
   background: var(--bg-card);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--bg-card-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
@@ -67,53 +59,36 @@ body {
   top: 0;
   left: 0;
   right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, #6366f1, #38bdf8, #10b981);
+  height: 3px;
+  background: var(--accent-primary);
 }
 
 .guard-header {
   margin-bottom: 24px;
 }
 
-.guard-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: rgba(99, 102, 241, 0.15);
-  border: 1px solid rgba(99, 102, 241, 0.3);
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #a5b4fc;
-  margin-bottom: 12px;
-}
-
 .guard-title {
   font-size: 22px;
   font-weight: 700;
-  letter-spacing: -0.02em;
-  margin-bottom: 6px;
-  background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.01em;
+  margin-bottom: 8px;
+  color: var(--text-main);
 }
 
 .guard-subtitle {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-muted);
-  line-height: 1.5;
+  line-height: 1.55;
 }
 
-/* CAPTCHA Box */
+/* CAPTCHA Box (kept left-to-right so dragging works the same in RTL languages) */
 .captcha-box {
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  direction: ltr;
+  background: #f8f9fc;
+  border: 1px solid var(--bg-card-border);
   border-radius: var(--radius-md);
   padding: 16px;
-  margin-bottom: 24px;
+  margin-bottom: 8px;
 }
 
 .captcha-stage {
@@ -123,8 +98,8 @@ body {
   margin: 0 auto 16px auto;
   border-radius: var(--radius-sm);
   overflow: hidden;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-  background: #000;
+  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.2);
+  background: #dfe4ec;
   user-select: none;
   -webkit-user-select: none;
 }
@@ -144,17 +119,13 @@ body {
   height: 44px;
   pointer-events: none;
   z-index: 5;
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
+  filter: drop-shadow(0 2px 4px rgba(16, 24, 40, 0.45));
 }
 
 .captcha-loading-overlay {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(11, 15, 25, 0.85);
-  backdrop-filter: blur(4px);
+  inset: 0;
+  background: rgba(255, 255, 255, 0.9);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -164,10 +135,14 @@ body {
   transition: opacity 0.2s ease;
 }
 
+.captcha-loading-overlay span {
+  color: var(--text-muted);
+}
+
 .captcha-spinner {
   width: 28px;
   height: 28px;
-  border: 3px solid rgba(99, 102, 241, 0.2);
+  border: 3px solid var(--accent-soft);
   border-top-color: var(--accent-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -198,28 +173,27 @@ body {
   left: 0;
   height: 100%;
   width: 0%;
-  background: linear-gradient(90deg, rgba(99, 102, 241, 0.4), rgba(56, 189, 248, 0.5));
+  background: #cfdcf6;
   pointer-events: none;
   transition: width 0.05s ease-out;
 }
 
 .slider-track.success .slider-progress {
-  background: linear-gradient(90deg, rgba(16, 185, 129, 0.6), rgba(52, 211, 153, 0.7));
+  background: #c6ebd3;
 }
 
 .slider-track.failed .slider-progress {
-  background: linear-gradient(90deg, rgba(239, 68, 68, 0.6), rgba(248, 113, 113, 0.7));
+  background: #f8d3cf;
 }
 
 .slider-hint-text {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 0 52px;
+  text-align: center;
   font-size: 13px;
   font-weight: 500;
   color: var(--text-muted);
@@ -233,15 +207,24 @@ body {
   left: 2px;
   width: 40px;
   height: 40px;
-  background: #ffffff;
+  background: var(--accent-primary);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: grab;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.3);
   transition: background 0.2s ease, transform 0.1s ease;
   z-index: 4;
+}
+
+.slider-handle:hover {
+  background: var(--accent-primary-hover);
+}
+
+.slider-handle:focus-visible {
+  outline: 3px solid rgba(30, 79, 184, 0.35);
+  outline-offset: 2px;
 }
 
 .slider-handle:active {
@@ -252,26 +235,15 @@ body {
 .slider-handle svg {
   width: 18px;
   height: 18px;
-  color: #1f2937;
-  transition: transform 0.2s ease, color 0.2s ease;
+  color: #ffffff;
 }
 
 .slider-track.success .slider-handle {
   background: var(--success);
-  box-shadow: 0 0 16px var(--success-glow);
-}
-
-.slider-track.success .slider-handle svg {
-  color: #ffffff;
 }
 
 .slider-track.failed .slider-handle {
   background: var(--danger);
-  box-shadow: 0 0 16px var(--danger-glow);
-}
-
-.slider-track.failed .slider-handle svg {
-  color: #ffffff;
 }
 
 /* Captcha Footer controls */
@@ -286,25 +258,27 @@ body {
 .refresh-btn {
   background: none;
   border: none;
-  color: var(--text-muted);
+  color: var(--accent-primary);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  font: inherit;
   font-size: 12px;
+  font-weight: 500;
   padding: 4px 8px;
   border-radius: var(--radius-sm);
   transition: var(--transition-smooth);
 }
 
 .refresh-btn:hover {
-  color: var(--text-main);
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--accent-soft);
 }
 
 .captcha-status-msg {
   font-size: 12px;
   font-weight: 500;
+  text-align: right;
   transition: var(--transition-smooth);
 }
 
@@ -316,11 +290,11 @@ body {
   color: var(--danger);
 }
 
-/* Protected Application Area */
+/* Success card (shown only when no redirect is configured) */
 .protected-content-box {
   display: none;
-  background: rgba(16, 185, 129, 0.08);
-  border: 1px solid rgba(16, 185, 129, 0.25);
+  background: var(--success-soft);
+  border: 1px solid var(--success-border);
   border-radius: var(--radius-md);
   padding: 20px;
   text-align: center;
@@ -336,8 +310,8 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: rgba(16, 185, 129, 0.2);
-  color: #34d399;
+  background: #d5efdf;
+  color: var(--success);
   padding: 4px 12px;
   border-radius: 999px;
   font-size: 12px;
@@ -346,24 +320,33 @@ body {
 }
 
 .protected-info {
-  font-size: 13px;
-  color: #d1fae5;
+  font-size: 14px;
+  color: var(--text-main);
   margin-bottom: 16px;
   line-height: 1.5;
 }
 
 .reset-btn {
-  background: #374151;
-  color: #f3f4f6;
+  background: var(--accent-primary);
+  color: #ffffff;
   border: none;
-  padding: 8px 18px;
+  padding: 9px 20px;
   border-radius: var(--radius-sm);
-  font-size: 12px;
+  font: inherit;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: var(--transition-smooth);
 }
 
 .reset-btn:hover {
-  background: #4b5563;
+  background: var(--accent-primary-hover);
+}
+
+/* Small phones: the puzzle is a fixed 340px wide, so trim padding to make it fit (down to 360px screens) */
+@media (max-width: 420px) {
+  body { padding: 12px 0; }
+  .guard-container { padding: 24px 8px; border-radius: 0; border-left: 0; border-right: 0; }
+  .guard-header { padding: 0 8px; }
+  .captcha-box { padding: 0; border: 0; background: transparent; }
 }

@@ -2,6 +2,16 @@
  * AWS Amplify Serverless Function Entry Point: guardCaptcha
  */
 const { createChallenge, verifyChallenge, validatePassToken } = require('./services/captchaService');
+const { getRedirectUrl } = require('./services/redirect');
+
+function readCookie(event, name) {
+  const list = event.cookies || (event.headers?.cookie || event.headers?.Cookie || '').split(';');
+  for (const c of list) {
+    const i = c.indexOf('=');
+    if (i > -1 && c.slice(0, i).trim() === name) return c.slice(i + 1).trim();
+  }
+  return null;
+}
 
 exports.handler = async (event) => {
   // Support API Gateway v1 (REST API / proxy), v2 (HTTP API), and direct Lambda invoke
@@ -46,10 +56,36 @@ exports.handler = async (event) => {
         responseHeaders['Set-Cookie'] = `captcha_token=${result.passToken}; Path=/; Max-Age=${result.expiresIn}; SameSite=Lax; Secure; HttpOnly`;
       }
 
+      // Tell the client *whether* to redirect, never *where*.
+      const payload = result.success && getRedirectUrl()
+        ? { ...result, redirect: '/api/captcha/redirect' }
+        : result;
+
       return {
         statusCode: result.success ? 200 : 400,
         headers: responseHeaders,
-        body: JSON.stringify(result)
+        body: JSON.stringify(payload)
+      };
+    }
+
+    // 2b. GET /api/captcha/redirect - server-side redirect, gated on a valid pass token
+    if (httpMethod === 'GET' && (path.endsWith('/redirect') || path.endsWith('/redirect/'))) {
+      const token = event.headers?.['x-captcha-token'] || event.headers?.['X-Captcha-Token'] || readCookie(event, 'captcha_token');
+      const destination = getRedirectUrl();
+      if (!token || !validatePassToken(token)) {
+        return {
+          statusCode: 403,
+          headers,
+          body: JSON.stringify({ error: 'CAPTCHA_REQUIRED', message: 'Access restricted. Please solve the puzzle challenge.' })
+        };
+      }
+      if (!destination) {
+        return { statusCode: 404, headers, body: JSON.stringify({ error: 'NOT_CONFIGURED', message: 'No redirect destination configured.' }) };
+      }
+      return {
+        statusCode: 302,
+        headers: { Location: destination, 'Cache-Control': 'no-store' },
+        body: ''
       };
     }
 

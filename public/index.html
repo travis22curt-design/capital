@@ -3,23 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Guard — Anti-Bot & Slider CAPTCHA Shield</title>
+  <title>Human Verification</title>
   <link rel="stylesheet" href="/captcha.css">
 </head>
 <body>
 
   <main class="guard-container">
     <header class="guard-header">
-      <div class="guard-badge">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
-        </svg>
-        Guard Shield Active
-      </div>
-      <h1 class="guard-title">Human Verification</h1>
-      <p class="guard-subtitle">
-        Slide the puzzle piece to complete the verification before accessing protected resources.
-      </p>
+      <h1 class="guard-title" data-i18n="title">Human Verification</h1>
+      <p class="guard-subtitle" data-i18n="subtitle">Slide the puzzle piece into place to confirm you're a real person. This quick check helps protect this site from automated bots.</p>
     </header>
 
     <!-- Interactive CAPTCHA Mount Point -->
@@ -31,63 +23,45 @@
         <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
         </svg>
-        Human Verified &amp; Authorized
+        <span data-i18n="okBadge">Verification complete</span>
       </div>
-      <p class="protected-info" id="protected-msg">
-        Fetching guarded resource...
-      </p>
-      <pre id="token-preview" style="text-align:left; background:rgba(0,0,0,0.4); padding:10px; border-radius:6px; font-size:11px; overflow-x:auto; margin-bottom:14px; color:#6ee7b7;"></pre>
-      <button type="button" class="reset-btn" id="retest-btn">Verify Again</button>
+      <p class="protected-info" id="protected-msg" data-i18n="okMsg">Thank you. You have been verified as a human visitor.</p>
+      <button type="button" class="reset-btn" id="retest-btn" data-i18n="retest">Verify again</button>
     </section>
   </main>
 
+  <script src="/i18n.js"></script>
   <script src="/captcha.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const protectedBox = document.getElementById('protected-content');
-      const protectedMsg = document.getElementById('protected-msg');
-      const tokenPreview = document.getElementById('token-preview');
       const retestBtn = document.getElementById('retest-btn');
       const captchaContainer = document.getElementById('captcha-container');
-
-      // Configure your destination URL here:
-      // If set, verified users are automatically redirected to this URL upon solving the puzzle.
-      // If left empty (""), it displays the in-page verification success card.
-      const DESTINATION_URL = 'https://betalphasolutions.com/'; 
 
       let captcha = new SliderCaptcha({
         containerId: 'captcha-container',
         apiBase: '/api/captcha',
         onSuccess: async (data) => {
-          // 1. If a destination URL is configured, redirect immediately
-          if (DESTINATION_URL && DESTINATION_URL.trim() !== '') {
-            window.location.href = DESTINATION_URL;
+          // 1. If the server has a redirect configured (redirectUrl in config.json), it tells us
+          //    to follow its redirect endpoint. The destination itself never reaches the client.
+          if (data.redirect) {
+            window.location.href = data.redirect;
             return;
           }
 
-          // 2. Default demonstration: fetch and display protected content in-page
+          // 2. No redirect configured: confirm access with the protected endpoint, then show the success card
           try {
             const res = await fetch('/api/protected/content', {
-              headers: {
-                'x-captcha-token': data.passToken
-              }
+              headers: { 'x-captcha-token': data.passToken }
             });
-            const protectedData = await res.json();
-            
             if (res.ok) {
               captchaContainer.style.display = 'none';
               protectedBox.style.display = 'block';
-              protectedMsg.textContent = protectedData.message;
-              tokenPreview.textContent = JSON.stringify({
-                status: 'PASSED',
-                session: protectedData.protectedData,
-                tokenExpiresIn: `${data.expiresIn} seconds`
-              }, null, 2);
             } else {
-              protectedMsg.textContent = 'Verification check failed on protected endpoint.';
+              captcha.showError(GuardI18n.t('errProtected'));
             }
           } catch (err) {
-            protectedMsg.textContent = 'Error connecting to protected server.';
+            captcha.showError(GuardI18n.t('errNetwork'));
           }
         },
         onError: (err) => {

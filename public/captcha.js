@@ -2,6 +2,8 @@
  * Guard Slider CAPTCHA Controller
  * Defensive Human-Interaction Verification Client
  */
+const tr = (key) => (window.GuardI18n ? window.GuardI18n.t(key) : key);
+
 class SliderCaptcha {
   constructor(options = {}) {
     this.containerId = options.containerId || 'captcha-container';
@@ -42,13 +44,13 @@ class SliderCaptcha {
           <img class="captcha-piece-img" alt="Puzzle Piece" />
           <div class="captcha-loading-overlay">
             <div class="captcha-spinner"></div>
-            <span style="font-size:12px;color:#9ca3af;">Securing challenge...</span>
+            <span style="font-size:12px;">${tr('loading')}</span>
           </div>
         </div>
 
         <div class="slider-track">
           <div class="slider-progress"></div>
-          <span class="slider-hint-text">Slide to complete the puzzle</span>
+          <span class="slider-hint-text">${tr('hint')}</span>
           <div class="slider-handle" tabindex="0" role="slider" aria-label="Slider CAPTCHA handle">
             <svg class="handle-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
@@ -61,7 +63,7 @@ class SliderCaptcha {
             <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
-            Refresh
+            ${tr('refresh')}
           </button>
           <div class="captcha-status-msg"></div>
         </div>
@@ -144,7 +146,7 @@ class SliderCaptcha {
         }, 200);
       };
     } catch (err) {
-      this.statusMsg.textContent = 'Failed to load CAPTCHA';
+      this.statusMsg.textContent = tr('errLoad');
       this.statusMsg.className = 'captcha-status-msg error';
       this.isLoading = false;
     }
@@ -208,18 +210,18 @@ class SliderCaptcha {
       if (res.ok && result.success) {
         this.handleSuccess(result);
       } else {
-        this.handleFailure(result.message || 'Verification failed');
+        this.handleFailure(tr('errVerify'));
       }
     } catch (err) {
       this.loadingOverlay.style.display = 'none';
-      this.handleFailure('Network error during verification');
+      this.handleFailure(tr('errNetwork'));
     }
   }
 
   handleSuccess(result) {
     this.isVerified = true;
     this.track.classList.add('success');
-    this.statusMsg.textContent = 'Verified Human';
+    this.statusMsg.textContent = tr('verified');
     this.statusMsg.className = 'captcha-status-msg success';
 
     // Set checkmark in handle
@@ -241,6 +243,11 @@ class SliderCaptcha {
     }, 1200);
 
     this.onError({ message });
+  }
+
+  showError(message) {
+    this.statusMsg.textContent = message;
+    this.statusMsg.className = 'captcha-status-msg error';
   }
 
   resetSliderVisuals() {

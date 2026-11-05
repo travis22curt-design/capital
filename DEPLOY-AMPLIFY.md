@@ -54,6 +54,8 @@ Amplify will automatically detect `amplify.yml` in the root of the project:
   - **Key**: `CAPTCHA_SECRET`
   - **Value**: Any strong 32+ character random string (e.g., `a78f4b0c2e914d3f82a17b6c5e4d3a2b109876543210fedcba`)
   - *(This ensures cryptographic tamper resistance across Lambda executions).*
+- To redirect verified users, edit **`redirectUrl`** in `config.json` (project root), and keep the copy at `amplify/backend/function/guardCaptcha/src/config.json` identical (the Lambda only packages its own `src/` folder).
+  - *(The URL lives only on the server. After a solve, the browser is sent to `/api/captcha/redirect`, which checks the pass token and issues the 302. Set it to `""` to show the in-page success card instead. A `REDIRECT_URL` environment variable, if set, overrides the file.)*
 
 ### Step 4: Configure API Gateway or Function URL
 To connect the frontend to the backend function:

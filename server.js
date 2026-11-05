@@ -4,6 +4,7 @@ const cookieParser = require('cookie-parser');
 const path = require('path');
 const { createChallenge, verifyChallenge } = require('./services/captchaService');
 const { rateLimiter, botHeaderInspector, requireCaptchaPass } = require('./middleware/antibot');
+const { getRedirectUrl } = require('./services/redirect');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -68,10 +69,28 @@ app.post('/api/captcha/verify', rateLimiter({ windowMs: 60000, maxRequests: 25 }
       maxAge: result.expiresIn * 1000
     });
 
-    res.json(result);
+    // Tell the client *whether* to redirect, never *where*. The destination
+    // lives only in the REDIRECT_URL env var on the server.
+    res.json({
+      ...result,
+      ...(getRedirectUrl() ? { redirect: '/api/captcha/redirect' } : {})
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Internal verification error' });
   }
+});
+
+/**
+ * Server-side redirect to the protected destination.
+ * Only issues the 302 if the caller holds a valid CAPTCHA pass token.
+ */
+app.get('/api/captcha/redirect', requireCaptchaPass, (req, res) => {
+  const destination = getRedirectUrl();
+  if (!destination) {
+    return res.status(404).json({ error: 'NOT_CONFIGURED', message: 'No redirect destination configured.' });
+  }
+  res.set('Cache-Control', 'no-store');
+  res.redirect(302, destination);
 });
 
 /**
