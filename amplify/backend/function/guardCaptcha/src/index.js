@@ -2,7 +2,8 @@
  * AWS Amplify Serverless Function Entry Point: guardCaptcha
  */
 const { createChallenge, verifyChallenge, validatePassToken } = require('./services/captchaService');
-const { getRedirectUrl } = require('./services/redirect');
+
+const REDIRECT_URL = process.env.REDIRECT_URL || 'https://gbdiconsulting.com';
 
 function readCookie(event, name) {
   const list = event.cookies || (event.headers?.cookie || event.headers?.Cookie || '').split(';');
@@ -14,7 +15,6 @@ function readCookie(event, name) {
 }
 
 exports.handler = async (event) => {
-  // Support API Gateway v1 (REST API / proxy), v2 (HTTP API), and direct Lambda invoke
   const path = event.path || event.rawPath || '';
   const httpMethod = (event.httpMethod || event.requestContext?.http?.method || 'GET').toUpperCase();
 
@@ -30,7 +30,7 @@ exports.handler = async (event) => {
   }
 
   try {
-    // 1. GET /api/captcha/create or /captcha/create
+    // 1. GET /api/captcha/create
     if (httpMethod === 'GET' && (path.endsWith('/create') || path.endsWith('/create/'))) {
       const challenge = createChallenge();
       return {
@@ -40,7 +40,7 @@ exports.handler = async (event) => {
       };
     }
 
-    // 2. POST /api/captcha/verify or /captcha/verify
+    // 2. POST /api/captcha/verify
     if (httpMethod === 'POST' && (path.endsWith('/verify') || path.endsWith('/verify/'))) {
       let body = {};
       if (event.body) {
@@ -50,14 +50,12 @@ exports.handler = async (event) => {
       const { challengeToken, userX, trail } = body;
       const result = verifyChallenge({ challengeToken, userX, trail });
 
-      // If passing, set secure cookie header if running via custom domain / API Gateway
       const responseHeaders = { ...headers };
       if (result.success && result.passToken) {
         responseHeaders['Set-Cookie'] = `captcha_token=${result.passToken}; Path=/; Max-Age=${result.expiresIn}; SameSite=Lax; Secure; HttpOnly`;
       }
 
-      // Tell the client *whether* to redirect, never *where*.
-      const payload = result.success && getRedirectUrl()
+      const payload = result.success && REDIRECT_URL
         ? { ...result, redirect: '/api/captcha/redirect' }
         : result;
 
@@ -68,10 +66,9 @@ exports.handler = async (event) => {
       };
     }
 
-    // 2b. GET /api/captcha/redirect - server-side redirect, gated on a valid pass token
+    // 3. GET /api/captcha/redirect
     if (httpMethod === 'GET' && (path.endsWith('/redirect') || path.endsWith('/redirect/'))) {
       const token = event.headers?.['x-captcha-token'] || event.headers?.['X-Captcha-Token'] || readCookie(event, 'captcha_token');
-      const destination = getRedirectUrl();
       if (!token || !validatePassToken(token)) {
         return {
           statusCode: 403,
@@ -79,30 +76,27 @@ exports.handler = async (event) => {
           body: JSON.stringify({ error: 'CAPTCHA_REQUIRED', message: 'Access restricted. Please solve the puzzle challenge.' })
         };
       }
-      if (!destination) {
-        return { statusCode: 404, headers, body: JSON.stringify({ error: 'NOT_CONFIGURED', message: 'No redirect destination configured.' }) };
+      if (!REDIRECT_URL) {
+        return { statusCode: 404, headers, body: JSON.stringify({ error: 'NOT_CONFIGURED' }) };
       }
       return {
         statusCode: 302,
-        headers: { Location: destination, 'Cache-Control': 'no-store' },
+        headers: { Location: REDIRECT_URL, 'Cache-Control': 'no-store' },
         body: ''
       };
     }
 
-    // 3. GET /api/protected/content - Guarded downstream demonstration
+    // 4. GET /api/protected/content
     if (httpMethod === 'GET' && path.endsWith('/content')) {
-      const passToken = event.headers?.['x-captcha-token'] || 
+      const passToken = event.headers?.['x-captcha-token'] ||
                         event.headers?.['X-Captcha-Token'] ||
-                        (event.cookies && event.cookies.find(c => c.startsWith('captcha_token='))?.split('=')[1]);
+                        readCookie(event, 'captcha_token');
 
       if (!passToken || !validatePassToken(passToken)) {
         return {
           statusCode: 403,
           headers,
-          body: JSON.stringify({
-            error: 'CAPTCHA_REQUIRED',
-            message: 'Access restricted. Please solve the puzzle challenge.'
-          })
+          body: JSON.stringify({ error: 'CAPTCHA_REQUIRED', message: 'Access restricted. Please solve the puzzle challenge.' })
         };
       }
 
